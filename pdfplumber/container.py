@@ -69,7 +69,15 @@ class Container(object):
     def rect_edges(self) -> T_obj_list:
         if hasattr(self, "_rect_edges"):
             return self._rect_edges
-        rect_edges_gen = (utils.rect_to_edges(r) for r in self.rects)
+        # Remove rects that cannot be lines.
+        rects = []
+        for rect in self.rects:
+            width = rect['width']
+            height = rect['height']
+            if width > 3.0 and height > 3.0:
+                continue
+            rects.append(rect)
+        rect_edges_gen = (utils.rect_to_edges(r) for r in rects)
         self._rect_edges: T_obj_list = list(chain(*rect_edges_gen))
         return self._rect_edges
 

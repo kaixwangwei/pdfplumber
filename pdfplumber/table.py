@@ -396,10 +396,12 @@ class Table(object):
             rows.append(row)
         return rows
 
-    def extract(self, **kwargs: Any) -> List[List[Optional[str]]]:
+    def extract(self, **kwargs: Any) -> Tuple[
+        List[List[Optional[str]]], List[Union[Any, Any, Any, Any]]]:
 
         chars = self.page.chars
         table_arr = []
+        bounds = [None,None,None,None]
 
         def char_in_bbox(char: T_obj, bbox: T_bbox) -> bool:
             v_mid = (char["top"] + char["bottom"]) / 2
@@ -411,6 +413,19 @@ class Table(object):
 
         for row in self.rows:
             arr = []
+            x0,y0,x1,y1 = row.bbox
+            if bounds[0] is None or x0 < bounds[0]:
+                bounds[0] = x0
+
+            if bounds[1] is None or y0 < bounds[1]:
+                bounds[1] = y0
+
+            if bounds[2] is None or x1 > bounds[2]:
+                bounds[2] = x1
+
+            if bounds[3] is None or y1 > bounds[3]:
+                bounds[3] = y1
+
             row_chars = [char for char in chars if char_in_bbox(char, row.bbox)]
 
             for cell in row.cells:
@@ -433,7 +448,7 @@ class Table(object):
                 arr.append(cell_text)
             table_arr.append(arr)
 
-        return table_arr
+        return table_arr, bounds
 
 
 TABLE_STRATEGIES = ["lines", "lines_strict", "text", "explicit"]
